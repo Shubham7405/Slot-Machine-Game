@@ -8,15 +8,16 @@ public class SlotReel : MonoBehaviour
     [SerializeField] private SpriteRenderer[] symbolRenderers;
     [SerializeField] private Sprite[] symbolSprites;
 
-    [Header("Spin Settings")]
-    [SerializeField] private float symbolHeight = 1.5f;
+    [Header("Reel Settings")]
+    [SerializeField] private float symbolHeight = 1f;
     [SerializeField] private float spinSpeed = 15f;
-    [SerializeField] private float spinDuration = 2.5f;
+    [SerializeField] private float spinDuration = 3f;
     [SerializeField] private float stopDuration = 0.6f;
 
     private bool isSpinning;
-
     public bool IsSpinning => isSpinning;
+
+    private float reelLength;
 
     private void Start()
     {
@@ -25,11 +26,15 @@ public class SlotReel : MonoBehaviour
 
     private void SetupReel()
     {
-        // Arrange four symbols vertically around the reel center.
+        reelLength = symbolRenderers.Length * symbolHeight;
+
+        // Arrange the symbols vertically with equal spacing.
         for (int i = 0; i < symbolRenderers.Length; i++)
         {
+            float yPosition = (2 - i) * symbolHeight;
+
             symbolRenderers[i].transform.localPosition =
-                new Vector3(0f, (1 - i) * symbolHeight, 0f);
+                new Vector3(0f, yPosition, 0f);
 
             symbolRenderers[i].sprite =
                 symbolSprites[Random.Range(0, symbolSprites.Length)];
@@ -48,118 +53,113 @@ public class SlotReel : MonoBehaviour
     {
         isSpinning = true;
 
+        // Phase 1: Spin at a constant speed.
         float elapsed = 0f;
 
-        // Spin continuously for the configured duration.
         while (elapsed < spinDuration)
         {
-            MoveSymbols(spinSpeed);
+            MoveSymbols(spinSpeed * Time.deltaTime, true);
 
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        // Gradually slow down the reel.
-        float stopElapsed = 0f;
+        // Phase 2: Prepare the final symbol while it is off-screen.
+        Transform targetTransform = GetHighestSymbol().transform;
 
-        while (stopElapsed < stopDuration)
-        {
-            float progress = stopElapsed / stopDuration;
+        SpriteRenderer targetRenderer = GetHighestSymbol();
+        targetRenderer.sprite = symbolSprites[targetSymbol];
 
-            // Ease-out: the reel slows down as it approaches the stop.
-            float currentSpeed = Mathf.Lerp(spinSpeed, 0f, progress);
+        // Calculate how far the target symbol must travel to reach the center.
+        float targetY = targetTransform.localPosition.y;
 
-            MoveSymbols(currentSpeed);
+        float distanceToCenter = Mathf.Repeat(targetY, reelLength);
 
-            stopElapsed += Time.deltaTime;
-            yield return null;
-        }
+        // Add one extra revolution so the reel doesn't stop immediately.
+        float totalStopDistance = distanceToCenter + reelLength;
 
-        // Smoothly align the symbols to their final positions.
-        yield return StartCoroutine(StopOnSymbol(targetSymbol));
-
-        isSpinning = false;
-    }
-
-    private void MoveSymbols(float speed)
-    {
-        float movement = speed * Time.deltaTime;
-
-        foreach (SpriteRenderer symbol in symbolRenderers)
-        {
-            Transform symbolTransform = symbol.transform;
-
-            Vector3 position = symbolTransform.localPosition;
-            position.y -= movement;
-
-            // Recycle symbols that move below the reel.
-            if (position.y < -2f * symbolHeight)
-            {
-                position.y += 4f * symbolHeight;
-
-                // Give the recycled symbol a random sprite.
-                symbol.sprite = symbolSprites[
-                    Random.Range(0, symbolSprites.Length)];
-            }
-
-            symbolTransform.localPosition = position;
-        }
-    }
-
-    private IEnumerator StopOnSymbol(int targetSymbol)
-    {
-        // Define the final symbol arrangement.
-        Sprite[] finalSprites =
-        {
-            symbolSprites[Random.Range(0, symbolSprites.Length)],
-            symbolSprites[targetSymbol],
-            symbolSprites[Random.Range(0, symbolSprites.Length)],
-            symbolSprites[Random.Range(0, symbolSprites.Length)]
-        };
-
-        Vector3[] targetPositions =
-        {
-            new Vector3(0f, symbolHeight, 0f),
-            Vector3.zero,
-            new Vector3(0f, -symbolHeight, 0f),
-            new Vector3(0f, -2f * symbolHeight, 0f)
-        };
-
-        Vector3[] startPositions = new Vector3[symbolRenderers.Length];
-
-        // Save the current positions before moving the symbols.
-        for (int i = 0; i < symbolRenderers.Length; i++)
-        {
-            startPositions[i] =
-                symbolRenderers[i].transform.localPosition;
-
-            symbolRenderers[i].sprite = finalSprites[i];
-        }
-
-        float elapsed = 0f;
+        // Phase 3: Gradually slow down while moving the symbols.
+        elapsed = 0f;
+        float previousDistance = 0f;
 
         while (elapsed < stopDuration)
         {
             float progress = elapsed / stopDuration;
 
-            // Smoothly move symbols into their final positions.
-            float easedProgress = Mathf.SmoothStep(0f, 1f, progress);
+            // Ease-out curve: movement becomes slower over time.
+            float easedProgress = 1f - Mathf.Pow(1f - progress, 2f);
 
-            for (int i = 0; i < symbolRenderers.Length; i++)
-            {
-                symbolRenderers[i].transform.localPosition =
-                    Vector3.Lerp(startPositions[i], targetPositions[i],
-                    easedProgress);
-            }
+            float currentDistance = totalStopDistance * easedProgress;
+            float frameDistance = currentDistance - previousDistance;
 
+            MoveSymbols(frameDistance, false);
+
+            previousDistance = currentDistance;
             elapsed += Time.deltaTime;
+
             yield return null;
         }
 
-        // Ensure all symbols are perfectly aligned at the end.
-        for (int i = 0; i < symbolRenderers.Length; i++)
+        // Finish the remaining movement.
+        MoveSymbols(totalStopDistance - previousDistance, false);
+
+        // Align the target symbol exactly in the center.
+        float finalOffset = targetTransform.localPosition.y;
+
+        foreach (SpriteRenderer symbol in symbolRenderers)
         {
-            symbolRenderers[i].transform.localPosition = targetPositions[i];
+            Vector3 position = symbol.transform.localPosition;
+            position.y -= finalOffset;
+            symbol.transform.localPosition = position;
         }
+
+        isSpinning = false;
+    }
+
+    private void MoveSymbols(float movement, bool randomizeOnRecycle)
+    {
+        // Move every symbol downward.
+        foreach (SpriteRenderer symbol in symbolRenderers)
+        {
+            Vector3 position = symbol.transform.localPosition;
+            position.y -= movement;
+            symbol.transform.localPosition = position;
+        }
+
+        // Recycle symbols that have moved below the reel.
+        foreach (SpriteRenderer symbol in symbolRenderers)
+        {
+            if (symbol.transform.localPosition.y < -2f * symbolHeight)
+            {
+                float highestPosition = GetHighestSymbol().transform.localPosition.y;
+
+                Vector3 position = symbol.transform.localPosition;
+                position.y = highestPosition + symbolHeight;
+                symbol.transform.localPosition = position;
+
+                // Only randomize symbols during the normal spinning phase.
+                if (randomizeOnRecycle)
+                {
+                    symbol.sprite =
+                        symbolSprites[Random.Range(0, symbolSprites.Length)];
+                }
+            }
+        }
+    }
+
+    private SpriteRenderer GetHighestSymbol()
+    {
+        SpriteRenderer highestSymbol = symbolRenderers[0];
+
+        foreach (SpriteRenderer symbol in symbolRenderers)
+        {
+            if (symbol.transform.localPosition.y >
+                highestSymbol.transform.localPosition.y)
+            {
+                highestSymbol = symbol;
+            }
+        }
+
+        return highestSymbol;
     }
 }

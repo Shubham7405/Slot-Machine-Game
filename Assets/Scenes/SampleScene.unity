@@ -426,6 +426,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7797513838196708450, guid: 62858f88c9cd5a44c9cc4d7c1802cdf4, type: 3}
+      propertyPath: spinSpeed
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 7797513838196708450, guid: 62858f88c9cd5a44c9cc4d7c1802cdf4, type: 3}
+      propertyPath: spinDuration
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7797513838196708450, guid: 62858f88c9cd5a44c9cc4d7c1802cdf4, type: 3}
+      propertyPath: stopDuration
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7797513838196708450, guid: 62858f88c9cd5a44c9cc4d7c1802cdf4, type: 3}
+      propertyPath: symbolHeight
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2020,6 +2036,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7797513838196708450, guid: 62858f88c9cd5a44c9cc4d7c1802cdf4, type: 3}
+      propertyPath: spinSpeed
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 7797513838196708450, guid: 62858f88c9cd5a44c9cc4d7c1802cdf4, type: 3}
+      propertyPath: spinDuration
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7797513838196708450, guid: 62858f88c9cd5a44c9cc4d7c1802cdf4, type: 3}
+      propertyPath: stopDuration
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7797513838196708450, guid: 62858f88c9cd5a44c9cc4d7c1802cdf4, type: 3}
+      propertyPath: symbolHeight
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2335,8 +2367,20 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7797513838196708450, guid: 62858f88c9cd5a44c9cc4d7c1802cdf4, type: 3}
+      propertyPath: spinSpeed
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 7797513838196708450, guid: 62858f88c9cd5a44c9cc4d7c1802cdf4, type: 3}
+      propertyPath: spinDuration
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7797513838196708450, guid: 62858f88c9cd5a44c9cc4d7c1802cdf4, type: 3}
+      propertyPath: stopDuration
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7797513838196708450, guid: 62858f88c9cd5a44c9cc4d7c1802cdf4, type: 3}
       propertyPath: symbolHeight
-      value: 150
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
