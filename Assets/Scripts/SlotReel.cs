@@ -16,6 +16,8 @@ public class SlotReel : MonoBehaviour
 
     private bool isSpinning;
 
+    public bool IsSpinning => isSpinning;
+
     private void Start()
     {
         SetupReel();
